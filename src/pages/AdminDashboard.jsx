@@ -26,6 +26,7 @@ export default function AdminDashboard() {
         cantidad: "",
         precioUnidad: "",
         precioCombo: "",
+        tallesColores: "",
         foto: ""
     });
     const [imagePreview, setImagePreview] = useState(null);
@@ -144,6 +145,7 @@ export default function AdminDashboard() {
                 cantidad: product.cantidad,
                 precioUnidad: product.precioUnidad,
                 precioCombo: product.precioCombo,
+                tallesColores: product.tallesColores || "",
                 foto: product.foto
             });
             setImagePreview(product.foto);
@@ -154,6 +156,7 @@ export default function AdminDashboard() {
                 cantidad: "",
                 precioUnidad: "",
                 precioCombo: "",
+                tallesColores: "",
                 foto: ""
             });
             setImagePreview(null);
@@ -169,6 +172,7 @@ export default function AdminDashboard() {
             cantidad: "",
             precioUnidad: "",
             precioCombo: "",
+            tallesColores: "",
             foto: ""
         });
         setImagePreview(null);
@@ -196,100 +200,39 @@ export default function AdminDashboard() {
 
     return (
         <div className="dashboard-wrapper">
-            {/* Navbar Superior */}
-            <nav className="navbar navbar-expand-lg navbar-dark dashboard-navbar">
-                <div className="container-fluid px-4">
-                    <a className="navbar-brand d-flex align-items-center" href="#">
-                        <div className="brand-icon me-3">
-                            <i className="bi bi-gem"></i>
-                        </div>
-                        <div>
-                            <h5 className="mb-0 fw-bold">MALEXA</h5>
-                            <small className="text-white-50">Panel Administrador</small>
-                        </div>
-                    </a>
-
-                    <div className="d-flex align-items-center">
-                        <div className="user-info me-3 d-none d-md-block">
-                            <div className="text-end">
-                                <div className="fw-semibold">{user?.name || "Administrador"}</div>
-                                <small className="text-white-50">{user?.username}</small>
+            {/* Navbar */}
+            <nav className="dashboard-navbar">
+                <div className="container-fluid">
+                    <div className="d-flex justify-content-between align-items-center">
+                        <div className="d-flex align-items-center gap-3">
+                            <div className="brand-icon">
+                                <i className="bi bi-gem"></i>
+                            </div>
+                            <div className="navbar-brand mb-0">
+                                <h5 className="mb-0 text-white">MALEXA</h5>
+                                <small className="text-white opacity-75">Panel de Administración</small>
                             </div>
                         </div>
-                        <div className="user-avatar me-3">
-                            <i className="bi bi-person-circle"></i>
+
+                        <div className="d-flex align-items-center gap-3">
+                            <div className="text-end d-none d-md-block">
+                                <div className="text-white fw-semibold">{user?.name || "Administrador"}</div>
+                                <small className="text-white opacity-75">Rol: {user?.role}</small>
+                            </div>
+
+                            <button className="btn btn-outline-light" onClick={logout}>
+                                <i className="bi bi-box-arrow-right me-2"></i>
+                                Salir
+                            </button>
                         </div>
-                        <button
-                            className="btn btn-outline-light btn-sm"
-                            onClick={logout}
-                        >
-                            <i className="bi bi-box-arrow-right me-2"></i>
-                            Salir
-                        </button>
                     </div>
                 </div>
             </nav>
 
-            {/* Estadísticas */}
-            <div className="stats-section">
-                <div className="container-fluid px-4 py-4">
-                    <div className="row g-3">
-                        <div className="col-12 col-sm-6 col-xl-3">
-                            <div className="stat-card stat-card-primary">
-                                <div className="stat-icon">
-                                    <i className="bi bi-box-seam"></i>
-                                </div>
-                                <div className="stat-content">
-                                    <div className="stat-label">Total Productos</div>
-                                    <div className="stat-value">{products.length}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-12 col-sm-6 col-xl-3">
-                            <div className="stat-card stat-card-success">
-                                <div className="stat-icon">
-                                    <i className="bi bi-check-circle"></i>
-                                </div>
-                                <div className="stat-content">
-                                    <div className="stat-label">Stock Disponible</div>
-                                    <div className="stat-value">
-                                        {products.reduce((sum, p) => sum + parseInt(p.cantidad || 0), 0)}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-12 col-sm-6 col-xl-3">
-                            <div className="stat-card stat-card-warning">
-                                <div className="stat-icon">
-                                    <i className="bi bi-people"></i>
-                                </div>
-                                <div className="stat-content">
-                                    <div className="stat-label">Usuarios</div>
-                                    <div className="stat-value">{users.length}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-12 col-sm-6 col-xl-3">
-                            <div className="stat-card stat-card-info">
-                                <div className="stat-icon">
-                                    <i className="bi bi-currency-dollar"></i>
-                                </div>
-                                <div className="stat-content">
-                                    <div className="stat-label">Valor Inventario</div>
-                                    <div className="stat-value">
-                                        ${products.reduce((sum, p) => sum + (parseFloat(p.precioUnidad || 0) * parseInt(p.cantidad || 0)), 0).toFixed(2)}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Navegación por Tabs */}
+            {/* Tabs Navigation */}
             <div className="tabs-navigation">
-                <div className="container-fluid px-4">
-                    <ul className="nav nav-tabs border-0">
+                <div className="container-fluid">
+                    <ul className="nav nav-tabs">
                         <li className="nav-item">
                             <button
                                 className={`nav-link ${activeTab === "productos" ? "active" : ""}`}
@@ -312,21 +255,17 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            {/* Contenido Principal */}
-            <div className="main-content">
-                <div className="container-fluid px-4 py-4">
+            {/* Main Content */}
+            <main className="main-content">
+                <div className="container-fluid">
+                    {/* Tab Productos */}
                     {activeTab === "productos" && (
                         <div className="content-card">
                             <div className="card-header">
-                                <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div className="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h4 className="mb-1 fw-bold">
-                                            <i className="bi bi-box-seam me-2 text-primary"></i>
-                                            Gestión de Productos
-                                        </h4>
-                                        <p className="text-muted mb-0 small">
-                                            Administrá tu inventario de productos
-                                        </p>
+                                        <h4 className="mb-1">Gestión de Productos</h4>
+                                        <div className="text-muted">Administre el inventario de productos</div>
                                     </div>
                                     <button
                                         className="btn btn-primary"
@@ -338,105 +277,90 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
 
-                            <div className="card-body p-0">
-                                {products.length === 0 ? (
-                                    <div className="empty-state py-5">
-                                        <i className="bi bi-inbox display-1 text-muted mb-3"></i>
-                                        <h5 className="text-muted">No hay productos registrados</h5>
-                                        <p className="text-muted">Comenzá agregando tu primer producto</p>
-                                        <button
-                                            className="btn btn-primary mt-3"
-                                            onClick={() => openProductModal()}
-                                        >
-                                            <i className="bi bi-plus-circle me-2"></i>
-                                            Crear Producto
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="table-responsive">
-                                        <table className="table table-hover align-middle mb-0">
-                                            <thead>
+                            <div className="card-body">
+                                <div className="table-responsive">
+                                    <table className="table table-hover align-middle">
+                                        <thead>
+                                        <tr>
+                                            <th>Foto</th>
+                                            <th>Nombre</th>
+                                            <th>Talles y/o Colores</th>
+                                            <th className="text-center">Cantidad</th>
+                                            <th className="text-end">Precio Unidad</th>
+                                            <th className="text-end">Precio Combo</th>
+                                            <th className="text-center">Acciones</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {products.length === 0 ? (
                                             <tr>
-                                                <th className="ps-4">Producto</th>
-                                                <th className="text-center">Cantidad</th>
-                                                <th className="text-end">Precio Unidad</th>
-                                                <th className="text-end">Precio Combo</th>
-                                                <th className="text-center pe-4">Acciones</th>
+                                                <td colSpan={7} className="text-center text-muted py-5">
+                                                    No hay productos registrados
+                                                </td>
                                             </tr>
-                                            </thead>
-                                            <tbody>
-                                            {products.map((product) => (
+                                        ) : (
+                                            products.map((product) => (
                                                 <tr key={product.id}>
-                                                    <td className="ps-4">
-                                                        <div className="d-flex align-items-center">
-                                                            {product.foto ? (
-                                                                <img
-                                                                    src={product.foto}
-                                                                    alt={product.nombre}
-                                                                    className="product-img me-3"
-                                                                />
-                                                            ) : (
-                                                                <div className="product-img-placeholder me-3">
-                                                                    <i className="bi bi-image"></i>
-                                                                </div>
-                                                            )}
-                                                            <div>
-                                                                <div className="fw-semibold">{product.nombre}</div>
-                                                                <small className="text-muted">ID: {product.id}</small>
+                                                    <td>
+                                                        {product.foto ? (
+                                                            <img
+                                                                src={product.foto}
+                                                                alt={product.nombre}
+                                                                className="product-img-sm"
+                                                            />
+                                                        ) : (
+                                                            <div className="product-img-placeholder-sm">
+                                                                <i className="bi bi-image"></i>
                                                             </div>
-                                                        </div>
+                                                        )}
+                                                    </td>
+                                                    <td className="fw-semibold">{product.nombre}</td>
+                                                    <td>
+                                                        <span className="text-muted" style={{fontSize: '0.95rem'}}>
+                                                            {product.tallesColores || "No especificado"}
+                                                        </span>
                                                     </td>
                                                     <td className="text-center">
-                                                            <span className={`badge ${parseInt(product.cantidad) > 10 ? 'bg-success' : 'bg-warning'}`}>
-                                                                {product.cantidad} unidades
-                                                            </span>
+                                                        <span className="badge bg-info text-dark">
+                                                            {product.cantidad} un.
+                                                        </span>
                                                     </td>
-                                                    <td className="text-end fw-semibold text-success">
-                                                        ${parseFloat(product.precioUnidad).toFixed(2)}
-                                                    </td>
-                                                    <td className="text-end fw-semibold text-info">
-                                                        ${parseFloat(product.precioCombo).toFixed(2)}
-                                                    </td>
-                                                    <td className="text-center pe-4">
+                                                    <td className="text-end fw-bold">${parseFloat(product.precioUnidad).toFixed(2)}</td>
+                                                    <td className="text-end fw-bold">${parseFloat(product.precioCombo).toFixed(2)}</td>
+                                                    <td className="text-center">
                                                         <div className="btn-group" role="group">
                                                             <button
                                                                 className="btn btn-sm btn-outline-primary"
                                                                 onClick={() => openProductModal(product)}
-                                                                title="Editar"
                                                             >
                                                                 <i className="bi bi-pencil"></i>
                                                             </button>
                                                             <button
                                                                 className="btn btn-sm btn-outline-danger"
                                                                 onClick={() => deleteProduct(product.id)}
-                                                                title="Eliminar"
                                                             >
                                                                 <i className="bi bi-trash"></i>
                                                             </button>
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
+                                            ))
+                                        )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     )}
 
+                    {/* Tab Usuarios */}
                     {activeTab === "usuarios" && (
                         <div className="content-card">
                             <div className="card-header">
-                                <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div className="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h4 className="mb-1 fw-bold">
-                                            <i className="bi bi-people me-2 text-warning"></i>
-                                            Gestión de Usuarios
-                                        </h4>
-                                        <p className="text-muted mb-0 small">
-                                            Administrá los usuarios del sistema
-                                        </p>
+                                        <h4 className="mb-1">Gestión de Usuarios</h4>
+                                        <div className="text-muted">Administre los usuarios del sistema</div>
                                     </div>
                                     <button
                                         className="btn btn-warning text-white"
@@ -448,82 +372,61 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
 
-                            <div className="card-body p-0">
-                                {users.length === 0 ? (
-                                    <div className="empty-state py-5">
-                                        <i className="bi bi-people display-1 text-muted mb-3"></i>
-                                        <h5 className="text-muted">No hay usuarios registrados</h5>
-                                        <p className="text-muted">Comenzá agregando tu primer usuario</p>
-                                        <button
-                                            className="btn btn-warning text-white mt-3"
-                                            onClick={() => openUserModal()}
-                                        >
-                                            <i className="bi bi-person-plus me-2"></i>
-                                            Crear Usuario
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="table-responsive">
-                                        <table className="table table-hover align-middle mb-0">
-                                            <thead>
+                            <div className="card-body">
+                                <div className="table-responsive">
+                                    <table className="table table-hover align-middle">
+                                        <thead>
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>Usuario</th>
+                                            <th>Rol</th>
+                                            <th className="text-center">Acciones</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {users.length === 0 ? (
                                             <tr>
-                                                <th className="ps-4">Nombre</th>
-                                                <th>Usuario</th>
-                                                <th>Rol</th>
-                                                <th className="text-center pe-4">Acciones</th>
+                                                <td colSpan={4} className="text-center text-muted py-5">
+                                                    No hay usuarios registrados
+                                                </td>
                                             </tr>
-                                            </thead>
-                                            <tbody>
-                                            {users.map((user) => (
-                                                <tr key={user.id}>
-                                                    <td className="ps-4">
-                                                        <div className="d-flex align-items-center">
-                                                            <div className="user-avatar-sm me-3">
-                                                                <i className="bi bi-person-circle"></i>
-                                                            </div>
-                                                            <div>
-                                                                <div className="fw-semibold">{user.name}</div>
-                                                                <small className="text-muted">ID: {user.id}</small>
-                                                            </div>
-                                                        </div>
-                                                    </td>
+                                        ) : (
+                                            users.map((u) => (
+                                                <tr key={u.id}>
+                                                    <td className="fw-semibold">{u.name}</td>
+                                                    <td>{u.username}</td>
                                                     <td>
-                                                        <code className="text-primary">{user.username}</code>
+                                                        <span className={`badge ${u.role === 'admin' ? 'bg-warning text-dark' : 'bg-info text-dark'}`}>
+                                                            {u.role === 'admin' ? 'Administrador' : 'Personal'}
+                                                        </span>
                                                     </td>
-                                                    <td>
-                                                            <span className={`badge ${user.role === 'admin' ? 'bg-primary' : 'bg-secondary'}`}>
-                                                                {user.role === 'admin' ? 'Administrador' : 'Personal'}
-                                                            </span>
-                                                    </td>
-                                                    <td className="text-center pe-4">
+                                                    <td className="text-center">
                                                         <div className="btn-group" role="group">
                                                             <button
-                                                                className="btn btn-sm btn-outline-primary"
-                                                                onClick={() => openUserModal(user)}
-                                                                title="Editar"
+                                                                className="btn btn-sm btn-outline-warning"
+                                                                onClick={() => openUserModal(u)}
                                                             >
                                                                 <i className="bi bi-pencil"></i>
                                                             </button>
                                                             <button
                                                                 className="btn btn-sm btn-outline-danger"
-                                                                onClick={() => deleteUser(user.id)}
-                                                                title="Eliminar"
+                                                                onClick={() => deleteUser(u.id)}
                                                             >
                                                                 <i className="bi bi-trash"></i>
                                                             </button>
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
+                                            ))
+                                        )}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
-            </div>
+            </main>
 
             {/* Modal de Producto */}
             {showProductModal && (
@@ -550,8 +453,24 @@ export default function AdminDashboard() {
                                                 value={productForm.nombre}
                                                 onChange={(e) => setProductForm({ ...productForm, nombre: e.target.value })}
                                                 required
-                                                placeholder="Ej: Remera básica"
+                                                placeholder="Ej: Cartera de Cuero"
                                             />
+                                        </div>
+
+                                        <div className="col-12">
+                                            <label className="form-label fw-semibold">
+                                                Talles y/o Colores
+                                            </label>
+                                            <textarea
+                                                className="form-control form-control-lg"
+                                                rows="3"
+                                                value={productForm.tallesColores}
+                                                onChange={(e) => setProductForm({ ...productForm, tallesColores: e.target.value })}
+                                                placeholder="Ej: Talles: S, M, L, XL - Colores: Rojo, Negro, Azul"
+                                            />
+                                            <div className="form-text">
+                                                Especifique los talles disponibles y/o colores del producto (opcional)
+                                            </div>
                                         </div>
 
                                         <div className="col-md-4">

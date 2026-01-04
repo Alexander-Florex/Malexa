@@ -1,5 +1,5 @@
 /* ==========================================
-   DASHBOARD - DISEÑO MODERNO CON BOOTSTRAP 5
+   DASHBOARD - DISEÑO PROFESIONAL MULTI-DISPOSITIVO
    ========================================== */
 
 /* Importar Bootstrap Icons */
@@ -11,6 +11,8 @@
     --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
     --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --max-width-desktop: 1600px;
+    --container-padding: 3rem;
 }
 
 * {
@@ -22,48 +24,66 @@
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #f8f9fa;
+    overflow-x: hidden;
 }
 
 /* ==========================================
-   DASHBOARD WRAPPER
+   DASHBOARD WRAPPER - CENTRADO DESKTOP
    ========================================== */
 .dashboard-wrapper {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     background: #f8f9fa;
+    width: 100%;
 }
 
 /* ==========================================
-   NAVBAR SUPERIOR
+   NAVBAR SUPERIOR - CENTRADO Y RESPONSIVE
    ========================================== */
 .dashboard-navbar {
     background: var(--primary-gradient);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    padding: 1rem 0;
+    padding: 1.5rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
 }
 
 .dashboard-navbar.staff-navbar {
     background: var(--secondary-gradient);
 }
 
+.dashboard-navbar .container-fluid {
+    max-width: var(--max-width-desktop);
+    margin: 0 auto;
+    padding: 0 var(--container-padding);
+}
+
 .brand-icon {
-    width: 50px;
-    height: 50px;
+    width: 55px;
+    height: 55px;
     background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
-    border-radius: 12px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.75rem;
+    font-size: 2rem;
     color: white;
+    flex-shrink: 0;
 }
 
 .navbar-brand h5 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     font-weight: 900;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    margin: 0;
+}
+
+.navbar-brand small {
+    font-size: 0.95rem;
 }
 
 .user-info {
@@ -71,40 +91,51 @@ body {
 }
 
 .user-avatar {
-    width: 45px;
-    height: 45px;
+    width: 50px;
+    height: 50px;
     background: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.75rem;
+    font-size: 2rem;
     color: white;
+    flex-shrink: 0;
 }
 
 /* ==========================================
-   SECCIÓN DE ESTADÍSTICAS
+   SECCIÓN DE ESTADÍSTICAS - DESKTOP FIRST
    ========================================== */
 .stats-section {
     background: white;
     border-bottom: 1px solid #e9ecef;
+    width: 100%;
+    padding: 2.5rem 0;
 }
 
 .stats-section.staff-stats {
     background: linear-gradient(to bottom, rgba(240, 147, 251, 0.05), white);
 }
 
+.stats-section .container-fluid {
+    max-width: var(--max-width-desktop);
+    margin: 0 auto;
+    padding: 0 var(--container-padding);
+}
+
 .stat-card {
     background: white;
-    border-radius: 16px;
-    padding: 1.75rem;
+    border-radius: 20px;
+    padding: 2rem;
     display: flex;
     align-items: center;
-    gap: 1.5rem;
+    gap: 2rem;
     border: 2px solid #e9ecef;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    height: 100%;
+    min-height: 140px;
 }
 
 .stat-card::before {
@@ -120,8 +151,8 @@ body {
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    transform: translateY(-8px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
     border-color: transparent;
 }
 
@@ -162,13 +193,13 @@ body {
 }
 
 .stat-icon {
-    width: 70px;
-    height: 70px;
-    border-radius: 16px;
+    width: 80px;
+    height: 80px;
+    border-radius: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 2.5rem;
     color: white;
     flex-shrink: 0;
     position: relative;
@@ -183,39 +214,57 @@ body {
 }
 
 .stat-label {
-    font-size: 0.875rem;
+    font-size: 0.95rem;
     color: #6c757d;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.5rem;
+    letter-spacing: 0.8px;
+    margin-bottom: 0.75rem;
 }
 
 .stat-value {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 800;
     color: #212529;
     line-height: 1;
 }
 
 /* ==========================================
-   NAVEGACIÓN POR TABS
+   NAVEGACIÓN POR TABS - CENTRADO
    ========================================== */
 .tabs-navigation {
     background: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    position: sticky;
+    top: 96px;
+    z-index: 999;
+}
+
+.tabs-navigation .container-fluid {
+    max-width: var(--max-width-desktop);
+    margin: 0 auto;
+    padding: 0 var(--container-padding);
+}
+
+.tabs-navigation .nav-tabs {
+    border: none;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
 }
 
 .tabs-navigation .nav-link {
     background: none;
     border: none;
-    border-bottom: 3px solid transparent;
+    border-bottom: 4px solid transparent;
     color: #6c757d;
     font-weight: 600;
-    font-size: 1rem;
-    padding: 1.25rem 1.75rem;
+    font-size: 1.1rem;
+    padding: 1.5rem 2rem;
     transition: all 0.3s ease;
     position: relative;
+    white-space: nowrap;
 }
 
 .tabs-navigation .nav-link:hover {
@@ -230,17 +279,24 @@ body {
 }
 
 /* ==========================================
-   CONTENIDO PRINCIPAL
+   CONTENIDO PRINCIPAL - CENTRADO Y ESPACIADO
    ========================================== */
 .main-content {
     flex: 1;
-    padding-bottom: 2rem;
+    padding: 3rem 0;
+    width: 100%;
+}
+
+.main-content .container-fluid {
+    max-width: var(--max-width-desktop);
+    margin: 0 auto;
+    padding: 0 var(--container-padding);
 }
 
 .content-card {
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     overflow: hidden;
     animation: fadeInUp 0.5s ease-out;
 }
@@ -248,7 +304,7 @@ body {
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(30px);
     }
     to {
         opacity: 1;
@@ -258,12 +314,23 @@ body {
 
 .card-header {
     background: linear-gradient(to right, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
-    padding: 2rem;
+    padding: 2.5rem;
     border-bottom: 2px solid #f8f9fa;
 }
 
+.card-header h4 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0;
+}
+
+.card-header .btn {
+    font-size: 1.05rem;
+    padding: 0.875rem 2rem;
+}
+
 .card-body {
-    padding: 2rem;
+    padding: 2.5rem;
 }
 
 /* ==========================================
@@ -271,19 +338,30 @@ body {
    ========================================== */
 .empty-state {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 5rem 3rem;
 }
 
 .empty-state i {
     display: block;
-    margin: 0 auto 1.5rem;
+    margin: 0 auto 2rem;
+}
+
+.empty-state h5 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
 }
 
 /* ==========================================
-   TABLAS
+   TABLAS - DISEÑO ESPACIOSO
    ========================================== */
 .table {
-    font-size: 0.95rem;
+    font-size: 1.05rem;
+    margin-bottom: 0;
 }
 
 .table thead {
@@ -292,16 +370,17 @@ body {
 
 .table thead th {
     border: none;
-    padding: 1.25rem 1rem;
+    padding: 1.5rem 1.25rem;
     font-weight: 700;
     color: #495057;
     text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+    letter-spacing: 0.8px;
+    white-space: nowrap;
 }
 
 .table tbody td {
-    padding: 1.25rem 1rem;
+    padding: 1.5rem 1.25rem;
     vertical-align: middle;
     border-bottom: 1px solid #f1f3f5;
 }
@@ -312,7 +391,6 @@ body {
 
 .table tbody tr:hover {
     background: #f8f9fa;
-    transform: scale(1.01);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -321,12 +399,14 @@ body {
 }
 
 .table tfoot {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    font-weight: 700;
 }
 
 .table tfoot td {
-    padding: 1.5rem 1rem;
-    border-top: 2px solid #dee2e6;
+    padding: 2rem 1.25rem;
+    border-top: 3px solid #dee2e6;
+    background: #f8f9fa;
 }
 
 /* ==========================================
@@ -335,23 +415,27 @@ body {
 .product-card {
     background: white;
     border: 2px solid #e9ecef;
-    border-radius: 16px;
+    border-radius: 20px;
     overflow: hidden;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    transform: translateY(-10px);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
     border-color: #667eea;
 }
 
 .product-image {
     position: relative;
     width: 100%;
-    height: 200px;
+    height: 240px;
     overflow: hidden;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    flex-shrink: 0;
 }
 
 .product-image img {
@@ -362,7 +446,7 @@ body {
 }
 
 .product-card:hover .product-image img {
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 .product-no-image {
@@ -371,26 +455,30 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
+    font-size: 4rem;
     color: #ced4da;
 }
 
 .product-stock {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
 }
 
 .product-info {
-    padding: 1.5rem;
+    padding: 2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-title {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #212529;
-    margin-bottom: 1rem;
-    height: 2.4em;
+    margin-bottom: 1.5rem;
+    min-height: 2.5em;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -399,67 +487,67 @@ body {
 
 .product-prices {
     display: flex;
-    gap: 1rem;
+    gap: 1.25rem;
     justify-content: space-between;
+    margin-top: auto;
 }
 
 .price-item {
     flex: 1;
     text-align: center;
-    padding: 0.75rem;
+    padding: 1rem;
     background: #f8f9fa;
-    border-radius: 12px;
+    border-radius: 14px;
+}
+
+.price-item small {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .price {
-    font-size: 1.25rem;
+    font-size: 1.4rem;
     font-weight: 800;
-    margin-top: 0.25rem;
+    margin-top: 0.5rem;
+    display: block;
 }
 
 /* ==========================================
    IMÁGENES DE PRODUCTOS EN TABLA
    ========================================== */
 .product-img {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     object-fit: cover;
-    border-radius: 12px;
+    border-radius: 14px;
     border: 2px solid #e9ecef;
 }
 
 .product-img-placeholder {
-    width: 60px;
-    height: 60px;
+    width: 70px;
+    height: 70px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 12px;
+    border-radius: 14px;
     border: 2px solid #e9ecef;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 2rem;
     color: #ced4da;
 }
 
 .user-avatar-sm {
-    width: 45px;
-    height: 45px;
+    width: 50px;
+    height: 50px;
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1));
-    border-radius: 12px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     color: #667eea;
-}
-
-/* ==========================================
-   FILTROS
-   ========================================== */
-.filter-section {
-    background: linear-gradient(to right, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
-    padding: 1.5rem 2rem;
-    border-bottom: 2px solid #f8f9fa;
 }
 
 /* ==========================================
@@ -467,26 +555,33 @@ body {
    ========================================== */
 .badge {
     font-weight: 600;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-size: 0.85rem;
+    padding: 0.625rem 1.25rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
 }
 
 /* ==========================================
-   BOTONES PERSONALIZADOS
+   BOTONES - TAMAÑOS CORRECTOS Y ESPACIADO
    ========================================== */
 .btn {
     font-weight: 600;
-    letter-spacing: 0.3px;
-    border-radius: 10px;
-    padding: 0.625rem 1.25rem;
+    letter-spacing: 0.5px;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
     transition: all 0.3s ease;
     border: none;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap;
 }
 
 .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 .btn:active {
@@ -496,85 +591,175 @@ body {
 .btn-primary {
     background: var(--primary-gradient);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    color: white;
 }
 
 .btn-success {
     background: var(--success-gradient);
     box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+    color: white;
 }
 
 .btn-warning {
     background: var(--warning-gradient);
     box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);
+    color: white;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-outline-primary {
+    border: 2px solid #667eea;
+    color: #667eea;
+    background: white;
 }
 
 .btn-outline-primary:hover {
     background: var(--primary-gradient);
     color: white;
+    border-color: transparent;
 }
 
-.btn-outline-success:hover {
-    background: var(--success-gradient);
+.btn-outline-secondary {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+    background: white;
+}
+
+.btn-outline-danger {
+    border: 2px solid #dc3545;
+    color: #dc3545;
+    background: white;
+}
+
+.btn-outline-danger:hover {
+    background: #dc3545;
     color: white;
+    border-color: transparent;
+}
+
+.btn-outline-warning {
+    border: 2px solid #ffc107;
+    color: #ffc107;
+    background: white;
+}
+
+.btn-outline-warning:hover {
+    background: #ffc107;
+    color: white;
+    border-color: transparent;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.15rem;
+}
+
+/* Botones en grupo - Espaciado correcto */
+.btn-group {
+    display: inline-flex;
+    gap: 0.5rem;
+}
+
+.btn-group .btn {
+    margin: 0;
 }
 
 /* ==========================================
-   MODALES
+   MODALES - CENTRADOS Y BIEN DIMENSIONADOS
    ========================================== */
+.modal.show {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-dialog {
+    margin: 2rem auto;
+    max-width: 600px;
+    width: calc(100% - 2rem);
+}
+
+.modal-dialog-centered {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 4rem);
+}
+
+.modal-lg {
+    max-width: 900px;
+}
+
 .modal-content {
     border: none;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border-radius: 24px;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
     animation: slideDown 0.3s ease-out;
 }
 
 @keyframes slideDown {
     from {
         opacity: 0;
-        transform: translateY(-30px);
+        transform: scale(0.9) translateY(-50px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1) translateY(0);
     }
 }
 
 .modal-header {
     background: linear-gradient(to right, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
     border-bottom: 2px solid #f8f9fa;
-    padding: 1.5rem 2rem;
+    padding: 2rem 2.5rem;
 }
 
 .modal-title {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
+    font-weight: 700;
     color: #212529;
 }
 
 .modal-body {
-    padding: 2rem;
+    padding: 2.5rem;
 }
 
 .modal-footer {
     border-top: 2px solid #f8f9fa;
-    padding: 1.25rem 2rem;
+    padding: 1.75rem 2.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.modal-footer .btn {
+    min-width: 120px;
 }
 
 /* ==========================================
-   FORMULARIOS
+   FORMULARIOS - ESPACIADOS Y LEGIBLES
    ========================================== */
 .form-label {
     font-weight: 600;
     color: #495057;
-    margin-bottom: 0.5rem;
-    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
 }
 
 .form-control,
 .form-select {
     border: 2px solid #e9ecef;
-    border-radius: 10px;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
+    border-radius: 12px;
+    padding: 0.875rem 1.25rem;
+    font-size: 1.05rem;
     transition: all 0.3s ease;
 }
 
@@ -582,12 +767,17 @@ body {
 .form-select:focus {
     border-color: #667eea;
     box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.15);
+    outline: none;
 }
 
 .form-control-lg,
 .form-select-lg {
-    padding: 0.875rem 1.25rem;
-    font-size: 1.1rem;
+    padding: 1rem 1.5rem;
+    font-size: 1.15rem;
+}
+
+.input-group {
+    display: flex;
 }
 
 .input-group-text {
@@ -596,12 +786,14 @@ body {
     border-right: none;
     font-weight: 600;
     color: #6c757d;
-    border-radius: 10px 0 0 10px;
+    border-radius: 12px 0 0 12px;
+    padding: 0.875rem 1.25rem;
+    font-size: 1.05rem;
 }
 
 .input-group .form-control {
     border-left: none;
-    border-radius: 0 10px 10px 0;
+    border-radius: 0 12px 12px 0;
 }
 
 .input-group:focus-within .input-group-text {
@@ -609,12 +801,82 @@ body {
     background: rgba(102, 126, 234, 0.05);
 }
 
+/* Espaciado entre campos del formulario */
+.row.g-3 > * {
+    margin-bottom: 1.5rem;
+}
+
 /* ==========================================
-   RESPONSIVE
+   RESPONSIVE - TABLET (768px - 1199px)
    ========================================== */
-@media (max-width: 991.98px) {
+@media (max-width: 1199.98px) and (min-width: 768px) {
+    :root {
+        --container-padding: 2rem;
+    }
+
+    .stat-icon {
+        width: 70px;
+        height: 70px;
+        font-size: 2rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+    }
+
+    .product-image {
+        height: 200px;
+    }
+
+    .tabs-navigation {
+        top: 88px;
+    }
+
+    .card-header h4 {
+        font-size: 1.5rem;
+    }
+}
+
+/* ==========================================
+   RESPONSIVE - MOBILE (< 768px)
+   ========================================== */
+@media (max-width: 767.98px) {
+    :root {
+        --container-padding: 1.25rem;
+    }
+
+    .dashboard-navbar {
+        padding: 1rem 0;
+    }
+
+    .brand-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.5rem;
+    }
+
+    .navbar-brand h5 {
+        font-size: 1.35rem;
+    }
+
+    .navbar-brand small {
+        font-size: 0.8rem;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+
+    .stats-section {
+        padding: 1.5rem 0;
+    }
+
     .stat-card {
+        flex-direction: row;
         padding: 1.5rem;
+        min-height: auto;
     }
 
     .stat-icon {
@@ -627,27 +889,48 @@ body {
         font-size: 1.75rem;
     }
 
-    .product-image {
-        height: 180px;
-    }
-}
-
-@media (max-width: 767.98px) {
-    .card-header {
-        padding: 1.5rem;
+    .stat-label {
+        font-size: 0.8rem;
     }
 
-    .card-body {
-        padding: 1.5rem;
+    .tabs-navigation {
+        top: 72px;
     }
 
     .tabs-navigation .nav-link {
         padding: 1rem 1.25rem;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
+    }
+
+    .main-content {
+        padding: 2rem 0;
+    }
+
+    .card-header {
+        padding: 1.75rem;
+    }
+
+    .card-header h4 {
+        font-size: 1.35rem;
+    }
+
+    .card-header .d-flex {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 1rem;
+    }
+
+    .card-header .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .card-body {
+        padding: 1.75rem;
     }
 
     .table {
-        font-size: 0.875rem;
+        font-size: 0.9rem;
     }
 
     .table thead th,
@@ -655,89 +938,84 @@ body {
         padding: 1rem 0.75rem;
     }
 
-    .product-card {
-        margin-bottom: 1rem;
+    .product-image {
+        height: 180px;
     }
 
-    .filter-section {
-        padding: 1rem 1.5rem;
+    .product-info {
+        padding: 1.5rem;
+    }
+
+    .product-title {
+        font-size: 1.1rem;
+    }
+
+    .price {
+        font-size: 1.2rem;
+    }
+
+    .modal-dialog {
+        margin: 1rem;
+        width: calc(100% - 2rem);
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+    }
+
+    .modal-title {
+        font-size: 1.35rem;
     }
 
     .modal-body {
         padding: 1.5rem;
     }
-}
 
-@media (max-width: 575.98px) {
-    .stat-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 1.25rem;
-    }
-
-    .stat-value {
-        font-size: 1.5rem;
-    }
-
-    .brand-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1.5rem;
-    }
-
-    .navbar-brand h5 {
-        font-size: 1.25rem;
-    }
-
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        font-size: 1.5rem;
-    }
-
-    .card-header h4 {
-        font-size: 1.25rem;
-    }
-
-    .product-image {
-        height: 160px;
-    }
-
-    .product-title {
-        font-size: 1rem;
-    }
-
-    .price {
-        font-size: 1.1rem;
-    }
-
-    .table {
-        font-size: 0.8rem;
-    }
-
-    .modal-header {
+    .modal-footer {
         padding: 1.25rem 1.5rem;
+        flex-direction: column;
     }
 
-    .modal-title {
+    .modal-footer .btn {
+        width: 100%;
+        margin: 0;
+    }
+
+    .btn-group {
+        flex-direction: row;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .empty-state {
+        padding: 3rem 1.5rem;
+    }
+
+    .empty-state h5 {
         font-size: 1.25rem;
+    }
+
+    .empty-state p {
+        font-size: 0.95rem;
     }
 }
 
 /* ==========================================
-   ANIMACIONES Y EFECTOS
+   AJUSTES ESPECÍFICOS PARA DESKTOP GRANDE
    ========================================== */
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
+@media (min-width: 1600px) {
+    :root {
+        --max-width-desktop: 1800px;
+        --container-padding: 4rem;
     }
-    50% {
-        opacity: 0.8;
-    }
-}
 
-.loading {
-    animation: pulse 1.5s ease-in-out infinite;
+    .stat-value {
+        font-size: 3rem;
+    }
+
+    .card-header h4 {
+        font-size: 2rem;
+    }
 }
 
 /* ==========================================
@@ -775,4 +1053,212 @@ body {
 
 .shadow-strong {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Forzar alineación de flex containers */
+.d-flex {
+    display: flex !important;
+}
+
+.justify-content-between {
+    justify-content: space-between !important;
+}
+
+.align-items-center {
+    align-items: center !important;
+}
+
+.gap-3 {
+    gap: 1rem !important;
+}
+
+.gap-4 {
+    gap: 1.5rem !important;
+}
+
+.flex-wrap {
+    flex-wrap: wrap !important;
+}
+
+/* ==========================================
+   CLASES ADICIONALES PARA STAFFDASHBOARD
+   ========================================== */
+
+/* Search box */
+.search-box {
+    position: relative;
+    max-width: 400px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 10;
+}
+
+.search-box .form-control {
+    padding-left: 3rem;
+    border-radius: 12px;
+    border: 2px solid #e9ecef;
+    height: 48px;
+}
+
+/* Dashboard card para contenido principal */
+.dashboard-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    margin-bottom: 1.5rem;
+}
+
+/* Ajustes para estadísticas */
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    height: 100%;
+    min-height: 120px;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #212529;
+    line-height: 1;
+}
+
+/* Variantes de color para stat-icon */
+.stat-icon.info {
+    background: var(--info-gradient);
+}
+
+.stat-icon.warning {
+    background: var(--warning-gradient);
+}
+
+.stat-icon.success {
+    background: var(--success-gradient);
+}
+
+.stat-icon.primary {
+    background: var(--primary-gradient);
+}
+
+/* Tabs navigation mejorado */
+.tabs-navigation {
+    background: white;
+    border-bottom: 1px solid #e9ecef;
+    width: 100%;
+}
+
+.tabs-navigation .nav-tabs {
+    border-bottom: none;
+}
+
+.tabs-navigation .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #6c757d;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.tabs-navigation .nav-link:hover {
+    color: #667eea;
+    background-color: rgba(102, 126, 234, 0.05);
+}
+
+.tabs-navigation .nav-link.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background-color: rgba(102, 126, 234, 0.1);
+}
+
+/* Imágenes de productos en tabla */
+.product-img-sm {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+}
+
+.product-img-placeholder-sm {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    border: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #ced4da;
+}
+
+/* Ajustes responsive para móviles */
+@media (max-width: 768px) {
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.25rem;
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 1.75rem;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+    }
+
+    .search-box {
+        max-width: 100%;
+        margin-top: 1rem;
+    }
+
+    .tabs-navigation .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
 }

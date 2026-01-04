@@ -34,18 +34,6 @@ export default function Login() {
 
     const meta = ROLE_META[role];
 
-    const handleQuickFill = (selectedRole) => {
-        setRole(selectedRole);
-        if (selectedRole === "admin") {
-            setIdentifier("admin@malexa.com");
-            setPassword("admin123");
-        } else {
-            setIdentifier("personal01");
-            setPassword("staff123");
-        }
-        setStep(2);
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -131,13 +119,6 @@ export default function Login() {
                                                 <span>Cloud & Sincronización</span>
                                             </div>
                                         </div>
-
-                                        <div className="demo-credentials">
-                                            <div className="demo-badge">
-                                                <i className="bi bi-info-circle me-2"></i>
-                                                <span>Demo: admin@malexa.com / admin123</span>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -191,32 +172,6 @@ export default function Login() {
                                                     Continuar
                                                     <i className="bi bi-arrow-right ms-2"></i>
                                                 </button>
-
-                                                <div className="quick-access-section">
-                                                    <div className="divider mb-3">
-                                                        <span>Acceso rápido para testing</span>
-                                                    </div>
-                                                    <div className="row g-2">
-                                                        <div className="col-6">
-                                                            <button
-                                                                className="btn btn-outline-secondary btn-sm w-100"
-                                                                onClick={() => handleQuickFill("admin")}
-                                                            >
-                                                                <i className="bi bi-shield-lock me-2"></i>
-                                                                Admin
-                                                            </button>
-                                                        </div>
-                                                        <div className="col-6">
-                                                            <button
-                                                                className="btn btn-outline-secondary btn-sm w-100"
-                                                                onClick={() => handleQuickFill("staff")}
-                                                            >
-                                                                <i className="bi bi-person-badge me-2"></i>
-                                                                Personal
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </div>
                                         ) : (
                                             /* PASO 2: Formulario de Login */
