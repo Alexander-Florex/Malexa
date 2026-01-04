@@ -428,20 +428,20 @@ export default function AdminDashboard() {
                 </div>
             </main>
 
-            {/* Modal de Producto */}
+            {/* Modal de Producto - VERSIÓN MEJORADA PARA MÓVILES */}
             {showProductModal && (
                 <div className="modal fade show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-                    <div className="modal-dialog modal-dialog-centered modal-lg">
+                    <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-fullscreen-sm-down">
                         <div className="modal-content">
-                            <div className="modal-header">
+                            <div className="modal-header bg-primary text-white">
                                 <h5 className="modal-title fw-bold">
                                     <i className="bi bi-box-seam me-2"></i>
                                     {editingProduct ? "Editar Producto" : "Nuevo Producto"}
                                 </h5>
-                                <button type="button" className="btn-close" onClick={closeProductModal}></button>
+                                <button type="button" className="btn-close btn-close-white" onClick={closeProductModal}></button>
                             </div>
                             <form onSubmit={handleProductSubmit}>
-                                <div className="modal-body">
+                                <div className="modal-body p-3">
                                     <div className="row g-3">
                                         <div className="col-12">
                                             <label className="form-label fw-semibold">
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
                                             </label>
                                             <input
                                                 type="text"
-                                                className="form-control form-control-lg"
+                                                className="form-control"
                                                 value={productForm.nombre}
                                                 onChange={(e) => setProductForm({ ...productForm, nombre: e.target.value })}
                                                 required
@@ -462,24 +462,24 @@ export default function AdminDashboard() {
                                                 Talles y/o Colores
                                             </label>
                                             <textarea
-                                                className="form-control form-control-lg"
+                                                className="form-control"
                                                 rows="3"
                                                 value={productForm.tallesColores}
                                                 onChange={(e) => setProductForm({ ...productForm, tallesColores: e.target.value })}
                                                 placeholder="Ej: Talles: S, M, L, XL - Colores: Rojo, Negro, Azul"
                                             />
-                                            <div className="form-text">
+                                            <div className="form-text small">
                                                 Especifique los talles disponibles y/o colores del producto (opcional)
                                             </div>
                                         </div>
 
-                                        <div className="col-md-4">
+                                        <div className="col-12 col-md-4">
                                             <label className="form-label fw-semibold">
                                                 Cantidad <span className="text-danger">*</span>
                                             </label>
                                             <input
                                                 type="number"
-                                                className="form-control form-control-lg"
+                                                className="form-control"
                                                 value={productForm.cantidad}
                                                 onChange={(e) => setProductForm({ ...productForm, cantidad: e.target.value })}
                                                 required
@@ -488,11 +488,11 @@ export default function AdminDashboard() {
                                             />
                                         </div>
 
-                                        <div className="col-md-4">
+                                        <div className="col-12 col-md-4">
                                             <label className="form-label fw-semibold">
                                                 Precio Unidad <span className="text-danger">*</span>
                                             </label>
-                                            <div className="input-group input-group-lg">
+                                            <div className="input-group">
                                                 <span className="input-group-text">$</span>
                                                 <input
                                                     type="number"
@@ -507,11 +507,11 @@ export default function AdminDashboard() {
                                             </div>
                                         </div>
 
-                                        <div className="col-md-4">
+                                        <div className="col-12 col-md-4">
                                             <label className="form-label fw-semibold">
                                                 Precio Combo <span className="text-danger">*</span>
                                             </label>
-                                            <div className="input-group input-group-lg">
+                                            <div className="input-group">
                                                 <span className="input-group-text">$</span>
                                                 <input
                                                     type="number"
@@ -530,20 +530,26 @@ export default function AdminDashboard() {
                                             <label className="form-label fw-semibold">Foto del Producto</label>
                                             <input
                                                 type="file"
-                                                className="form-control form-control-lg"
+                                                className="form-control"
                                                 accept="image/*"
                                                 onChange={handleImageChange}
                                             />
                                             {imagePreview && (
                                                 <div className="mt-3 text-center">
-                                                    <img src={imagePreview} alt="Preview" className="img-thumbnail" style={{maxHeight: '200px'}} />
+                                                    <img
+                                                        src={imagePreview}
+                                                        alt="Preview"
+                                                        className="img-fluid rounded"
+                                                        style={{maxHeight: '150px'}}
+                                                    />
                                                 </div>
                                             )}
                                         </div>
                                     </div>
                                 </div>
-                                <div className="modal-footer">
-                                    <button type="button" className="btn btn-secondary" onClick={closeProductModal}>
+                                <div className="modal-footer bg-light sticky-bottom">
+                                    <button type="button" className="btn btn-outline-secondary" onClick={closeProductModal}>
+                                        <i className="bi bi-x-circle me-2"></i>
                                         Cancelar
                                     </button>
                                     <button type="submit" className="btn btn-primary">
@@ -557,17 +563,17 @@ export default function AdminDashboard() {
                 </div>
             )}
 
-            {/* Modal de Usuario */}
+            {/* Modal de Usuario - VERSIÓN MEJORADA PARA MÓVILES */}
             {showUserModal && (
                 <div className="modal fade show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-                    <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                         <div className="modal-content">
-                            <div className="modal-header">
+                            <div className="modal-header bg-warning text-white">
                                 <h5 className="modal-title fw-bold">
                                     <i className="bi bi-person-plus me-2"></i>
                                     {editingUser ? "Editar Usuario" : "Nuevo Usuario"}
                                 </h5>
-                                <button type="button" className="btn-close" onClick={closeUserModal}></button>
+                                <button type="button" className="btn-close btn-close-white" onClick={closeUserModal}></button>
                             </div>
                             <form onSubmit={handleUserSubmit}>
                                 <div className="modal-body">
@@ -578,7 +584,7 @@ export default function AdminDashboard() {
                                             </label>
                                             <input
                                                 type="text"
-                                                className="form-control form-control-lg"
+                                                className="form-control"
                                                 value={userForm.name}
                                                 onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
                                                 required
@@ -592,7 +598,7 @@ export default function AdminDashboard() {
                                             </label>
                                             <input
                                                 type="text"
-                                                className="form-control form-control-lg"
+                                                className="form-control"
                                                 value={userForm.username}
                                                 onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
                                                 required
@@ -607,7 +613,7 @@ export default function AdminDashboard() {
                                             </label>
                                             <input
                                                 type="password"
-                                                className="form-control form-control-lg"
+                                                className="form-control"
                                                 value={userForm.password}
                                                 onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                                                 required={!editingUser}
@@ -620,7 +626,7 @@ export default function AdminDashboard() {
                                                 Rol <span className="text-danger">*</span>
                                             </label>
                                             <select
-                                                className="form-select form-select-lg"
+                                                className="form-select"
                                                 value={userForm.role}
                                                 onChange={(e) => setUserForm({ ...userForm, role: e.target.value })}
                                                 required
@@ -632,7 +638,8 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
                                 <div className="modal-footer">
-                                    <button type="button" className="btn btn-secondary" onClick={closeUserModal}>
+                                    <button type="button" className="btn btn-outline-secondary" onClick={closeUserModal}>
+                                        <i className="bi bi-x-circle me-2"></i>
                                         Cancelar
                                     </button>
                                     <button type="submit" className="btn btn-warning text-white">
