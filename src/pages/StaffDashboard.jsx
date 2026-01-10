@@ -1,117 +1,400 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import "./Dashboard.css";
-
-// Importar Bootstrap CSS
-import 'bootstrap/dist/css/bootstrap.min.css';
+import "bootstrap/dist/css/bootstrap.min.css";
 
 /**
  * StaffDashboard (Personal)
- * - Ve listado de productos sin cantidad
- * - Puede registrar ventas
- * - No puede crear/editar usuarios ni productos
+ * - Ve catálogo SIN cantidad (stock oculto)
+ * - Ve combos 2x..5x (con precios en tabla del catálogo)
+ * - Registrar venta con carrito
+ * - En registrar venta NO se muestran precios por producto/combos (solo etiquetas)
+ * - Se muestra Total a cobrar
+ * - Historial SIN total y SIN filtro por fecha
+ * - Descuenta stock automáticamente al registrar venta
+ * - Muestra resumen de stock: 54 (celeste) - 25↓ (rojo) = 29 (verde)
+ * - Guarda ventas completas en localStorage malexa.sales.v1 para que el admin las vea
  */
 export default function StaffDashboard() {
     const { user, logout } = useAuth();
+
+    const LS_PRODUCTS = "malexa.products.v1";
+    const LS_SALES = "malexa.sales.v1";
+
     const [products, setProducts] = useState([]);
     const [query, setQuery] = useState("");
+
     const [sales, setSales] = useState([]);
-    const [dateFilter, setDateFilter] = useState("");
     const [activeTab, setActiveTab] = useState("productos");
 
-    // Estado para modal de visualización de producto
+    // Modal detalle producto
     const [showProductDetailModal, setShowProductDetailModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
 
-    // Formulario de venta
-    const [saleForm, setSaleForm] = useState({
+    // Carrito
+    const [cartItems, setCartItems] = useState([]);
+
+    // Form para agregar item al carrito
+    const [cartForm, setCartForm] = useState({
         productId: "",
-        cantidad: "",
-        montoCobrado: "",
-        metodoCobro: "Efectivo"
+        pricingType: "unit", // unit | combo2 | combo3 | combo4 | combo5
+        qty: 1
     });
+
+    // Método de cobro (checkout)
+    const [metodoCobro, setMetodoCobro] = useState("Efectivo");
+
+    // Resumen stock (última venta)
+    const [lastStockMovements, setLastStockMovements] = useState([]);
+
+    // Helpers
+    const readLS = (key, fallback) => {
+        try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw);
+        } catch {
+            return fallback;
+        }
+    };
+
+    const writeLS = (key, value) => {
+        localStorage.setItem(key, JSON.stringify(value));
+    };
+
+    const toNumberOrNull = (v) => {
+        if (v === null || v === undefined || v === "") return null;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+    };
+
+    const formatMoneyOrDash = (v) => {
+        const n = toNumberOrNull(v);
+        if (n === null) return "-";
+        return `$${n.toFixed(2)}`;
+    };
+
+    const getProductById = (id) => products.find((p) => p.id === id);
+
+    const getComboPrice = (product, n) => {
+        if (!product) return null;
+        // compat: si existe precioCombo viejo, lo tratamos como combo2
+        if (n === 2) return toNumberOrNull(product.combo2 ?? product.precioCombo ?? null);
+        return toNumberOrNull(product[`combo${n}`] ?? null);
+    };
+
+    const getUnitPrice = (product) => toNumberOrNull(product?.precioUnidad ?? null);
+
+    const buildPricingOptions = (product) => {
+        if (!product) return [];
+        const opts = [];
+
+        const unitPrice = getUnitPrice(product);
+        if (unitPrice !== null) {
+            opts.push({
+                value: "unit",
+                label: "Unidad",
+                packSize: 1,
+                pricePerPack: unitPrice
+            });
+        }
+
+        for (let n = 2; n <= 5; n++) {
+            const p = getComboPrice(product, n);
+            if (p !== null) {
+                opts.push({
+                    value: `combo${n}`,
+                    label: `Combo ${n}x`,
+                    packSize: n,
+                    pricePerPack: p
+                });
+            }
+        }
+
+        return opts;
+    };
+
+    const buildProductTypesLabel = (product) => {
+        // muestra tipos disponibles pero SIN montos
+        const types = [];
+        if (getUnitPrice(product) !== null) types.push("U");
+        for (let n = 2; n <= 5; n++) {
+            if (getComboPrice(product, n) !== null) types.push(`${n}x`);
+        }
+        if (types.length === 0) return "";
+        return ` | ${types.join(", ")}`;
+    };
+
+    const selectedProductForCart = useMemo(() => {
+        const id = Number(cartForm.productId);
+        if (!Number.isFinite(id)) return null;
+        return getProductById(id) || null;
+    }, [cartForm.productId, products]);
+
+    const pricingOptions = useMemo(() => {
+        return buildPricingOptions(selectedProductForCart);
+    }, [selectedProductForCart]);
 
     // Cargar productos y ventas del localStorage
     useEffect(() => {
-        const storedProducts = localStorage.getItem("malexa.products.v1");
-        const storedSales = localStorage.getItem("malexa.sales.v1");
+        setProducts(readLS(LS_PRODUCTS, []));
+        setSales(readLS(LS_SALES, []));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-        if (storedProducts) setProducts(JSON.parse(storedProducts));
-        if (storedSales) setSales(JSON.parse(storedSales));
+    // Sync entre tabs
+    useEffect(() => {
+        const onStorage = (e) => {
+            if (e.key === LS_PRODUCTS) setProducts(readLS(LS_PRODUCTS, []));
+            if (e.key === LS_SALES) setSales(readLS(LS_SALES, []));
+        };
+        window.addEventListener("storage", onStorage);
+        return () => window.removeEventListener("storage", onStorage);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Filtrar productos por búsqueda
     const filteredProducts = useMemo(() => {
         const q = query.trim().toLowerCase();
         if (!q) return products;
-        return products.filter((p) =>
-            String(p?.nombre ?? "").toLowerCase().includes(q)
-        );
+        return products.filter((p) => String(p?.nombre ?? "").toLowerCase().includes(q));
     }, [products, query]);
 
-    // Filtrar ventas por fecha
-    const filteredSales = useMemo(() => {
-        if (!dateFilter) return sales;
+    // Ventas visibles: SOLO las registradas por este usuario
+    const visibleSales = useMemo(() => {
+        const myName = user?.name || "Personal";
+        return (sales || []).filter((s) => (s?.registradoPor || "Personal") === myName);
+    }, [sales, user]);
 
-        const filterDate = new Date(dateFilter);
-        filterDate.setHours(0, 0, 0, 0);
-        const nextDay = new Date(filterDate);
-        nextDay.setDate(nextDay.getDate() + 1);
+    // Total del carrito (solo de la venta actual)
+    const cartTotal = useMemo(() => {
+        return cartItems.reduce((acc, it) => acc + (Number(it.subtotal) || 0), 0);
+    }, [cartItems]);
 
-        return sales.filter(sale => {
-            const saleDate = new Date(sale.fecha);
-            return saleDate >= filterDate && saleDate < nextDay;
-        });
-    }, [sales, dateFilter]);
+    // Si cambia el producto del carrito, seteo pricingType a algo válido
+    useEffect(() => {
+        if (!selectedProductForCart) return;
+        const opts = buildPricingOptions(selectedProductForCart);
+        if (opts.length === 0) return;
 
-    // Calcular total de ventas del día
-    const totalVentasDia = useMemo(() => {
-        if (!dateFilter) return 0;
-        return filteredSales.reduce((acc, sale) => acc + parseFloat(sale.montoCobrado || 0), 0);
-    }, [filteredSales, dateFilter]);
+        const exists = opts.some((o) => o.value === cartForm.pricingType);
+        if (!exists) {
+            setCartForm((prev) => ({ ...prev, pricingType: opts[0].value }));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedProductForCart]);
 
-    // Obtener producto por ID
-    const getProductById = (id) => {
-        return products.find(p => p.id === id);
+    const getCurrentPricing = () => {
+        if (!selectedProductForCart) return null;
+        const opts = buildPricingOptions(selectedProductForCart);
+        return opts.find((o) => o.value === cartForm.pricingType) || null;
     };
 
-    // Manejar registro de venta
-    const handleSaleSubmit = (e) => {
-        e.preventDefault();
-
-        const product = getProductById(parseInt(saleForm.productId));
+    const addToCart = () => {
+        const product = selectedProductForCart;
         if (!product) {
-            alert("Seleccione un producto válido");
+            alert("Seleccioná un producto válido.");
             return;
         }
 
-        const newSale = {
+        const qty = Math.floor(Number(cartForm.qty));
+        if (!Number.isFinite(qty) || qty < 1) {
+            alert("Ingresá una cantidad válida (mínimo 1).");
+            return;
+        }
+
+        const pricing = getCurrentPricing();
+        if (!pricing) {
+            alert("Seleccioná un tipo de precio (unidad o combo).");
+            return;
+        }
+
+        const subtotal = pricing.pricePerPack * qty;
+
+        const newItem = {
             id: Date.now(),
-            productId: parseInt(saleForm.productId),
+            productId: product.id,
             productName: product.nombre,
-            cantidad: parseInt(saleForm.cantidad),
-            montoCobrado: parseFloat(saleForm.montoCobrado),
-            metodoCobro: saleForm.metodoCobro,
-            fecha: new Date().toISOString(),
-            registradoPor: user?.name || "Personal"
+            pricingType: pricing.value, // unit | combo2..5
+            packSize: pricing.packSize, // 1 | 2..5
+            qtyPacks: qty, // cantidad de unidades o cantidad de combos
+            pricePerPack: pricing.pricePerPack,
+            subtotal
         };
 
-        const updatedSales = [...sales, newSale];
-        setSales(updatedSales);
-        localStorage.setItem("malexa.sales.v1", JSON.stringify(updatedSales));
+        // Merge si es el mismo producto + mismo tipo + mismo precio
+        setCartItems((prev) => {
+            const idx = prev.findIndex(
+                (x) =>
+                    x.productId === newItem.productId &&
+                    x.pricingType === newItem.pricingType &&
+                    Number(x.pricePerPack) === Number(newItem.pricePerPack)
+            );
 
-        // Reset form
-        setSaleForm({
-            productId: "",
-            cantidad: "",
-            montoCobrado: "",
-            metodoCobro: "Efectivo"
+            if (idx === -1) return [...prev, newItem];
+
+            const copy = [...prev];
+            const old = copy[idx];
+            const mergedQty = Number(old.qtyPacks) + Number(newItem.qtyPacks);
+            copy[idx] = {
+                ...old,
+                qtyPacks: mergedQty,
+                subtotal: mergedQty * Number(old.pricePerPack)
+            };
+            return copy;
         });
 
-        alert("Venta registrada exitosamente!");
+        // Reset qty (mantengo producto y tipo seleccionado)
+        setCartForm((prev) => ({ ...prev, qty: 1 }));
     };
 
-    // Ver detalles de producto en modal mejorado
+    const removeCartItem = (itemId) => {
+        setCartItems((prev) => prev.filter((x) => x.id !== itemId));
+    };
+
+    const changeCartItemQty = (itemId, delta) => {
+        setCartItems((prev) =>
+            prev.map((x) => {
+                if (x.id !== itemId) return x;
+                const nextQty = Math.max(1, Math.floor(Number(x.qtyPacks) + delta));
+                return {
+                    ...x,
+                    qtyPacks: nextQty,
+                    subtotal: nextQty * Number(x.pricePerPack)
+                };
+            })
+        );
+    };
+
+    const clearCart = () => setCartItems([]);
+
+    const renderPricingTypeLabel = (pricingType) => {
+        if (pricingType === "unit") return "Unidad";
+        if (String(pricingType).startsWith("combo")) {
+            const n = Number(String(pricingType).replace("combo", ""));
+            if (Number.isFinite(n)) return `Combo ${n}x`;
+        }
+        return String(pricingType);
+    };
+
+    const buildSalePrimaryProduct = (sale) => {
+        if (Array.isArray(sale?.items) && sale.items.length > 0) {
+            return sale.items[0]?.productName || "Producto";
+        }
+        if (sale?.productName) return sale.productName;
+        return "Producto";
+    };
+
+    const buildSaleDetailLines = (sale) => {
+        if (Array.isArray(sale?.items) && sale.items.length > 0) {
+            const primary = buildSalePrimaryProduct(sale);
+
+            return sale.items.map((it) => {
+                const labelForLine = it.packSize === 1 ? `Unidad` : `Combo ${it.packSize}x`;
+
+                if (it.productName === primary) {
+                    return `${it.qtyPacks} -> ${labelForLine}`;
+                }
+
+                return `${it.qtyPacks} -> ${it.productName} ${labelForLine}`;
+            });
+        }
+
+        return ["-"];
+    };
+
+    // ========= STOCK UPDATE =========
+    const computeUnitsByProduct = (items) => {
+        const map = new Map();
+        for (const it of items) {
+            const units = Number(it.packSize) * Number(it.qtyPacks);
+            const pid = Number(it.productId);
+            if (!Number.isFinite(pid) || !Number.isFinite(units)) continue;
+            map.set(pid, (map.get(pid) || 0) + units);
+        }
+        return map;
+    };
+
+    const applyStockDiscountOrFail = (items) => {
+        const unitsMap = computeUnitsByProduct(items);
+        const movements = [];
+
+        // Validación stock suficiente
+        for (const [pid, soldUnits] of unitsMap.entries()) {
+            const p = products.find((x) => Number(x.id) === pid);
+            if (!p) {
+                alert("No se encontró un producto para descontar stock. Recargá la página.");
+                return { ok: false, updatedProducts: null, movements: [] };
+            }
+            const before = Number(p.cantidad) || 0;
+            const after = before - soldUnits;
+
+            if (after < 0) {
+                alert(
+                    `Stock insuficiente para "${p.nombre}".\nStock actual: ${before}\nNecesitás: ${soldUnits}\nFaltan: ${Math.abs(after)}`
+                );
+                return { ok: false, updatedProducts: null, movements: [] };
+            }
+
+            movements.push({
+                productId: pid,
+                productName: p.nombre,
+                before,
+                sold: soldUnits,
+                after
+            });
+        }
+
+        // Aplicar descuento
+        const updatedProducts = products.map((p) => {
+            const pid = Number(p.id);
+            const soldUnits = unitsMap.get(pid);
+            if (!soldUnits) return p;
+            const before = Number(p.cantidad) || 0;
+            const after = before - soldUnits;
+            return { ...p, cantidad: after };
+        });
+
+        return { ok: true, updatedProducts, movements };
+    };
+
+    const checkout = () => {
+        if (cartItems.length === 0) {
+            alert("El carrito está vacío.");
+            return;
+        }
+
+        // Descontar stock
+        const stockResult = applyStockDiscountOrFail(cartItems);
+        if (!stockResult.ok) return;
+
+        setProducts(stockResult.updatedProducts);
+        writeLS(LS_PRODUCTS, stockResult.updatedProducts);
+
+        const total = Number(cartTotal);
+
+        const newSale = {
+            id: Date.now(),
+            items: cartItems,
+            totalCobrado: total,
+            montoCobrado: total, // alias
+            metodoCobro,
+            fecha: new Date().toISOString(),
+            registradoPor: user?.name || "Personal",
+            registradoPorRol: user?.role || "staff",
+            stockMovements: stockResult.movements
+        };
+
+        const updatedSales = [...(sales || []), newSale];
+        setSales(updatedSales);
+        writeLS(LS_SALES, updatedSales);
+
+        setLastStockMovements(stockResult.movements);
+        clearCart();
+        alert("Venta registrada y stock actualizado ✅");
+    };
+
+    // Detalle producto
     const viewProductDetails = (product) => {
         setSelectedProduct(product);
         setShowProductDetailModal(true);
@@ -124,6 +407,7 @@ export default function StaffDashboard() {
 
     return (
         <div className="dashboard-wrapper">
+            {/* Navbar */}
             <nav className="dashboard-navbar">
                 <div className="container-fluid">
                     <div className="d-flex justify-content-between align-items-center">
@@ -133,18 +417,14 @@ export default function StaffDashboard() {
                             </div>
                             <div className="navbar-brand mb-0">
                                 <h5 className="mb-0 text-white">MALEXA</h5>
-                                <small className="text-white opacity-75">
-                                    Panel de Personal
-                                </small>
+                                <small className="text-white opacity-75">Panel de Personal</small>
                             </div>
                         </div>
 
                         <div className="d-flex align-items-center gap-3">
                             <div className="text-end d-none d-md-block">
                                 <div className="text-white fw-semibold">{user?.name || "Personal"}</div>
-                                <small className="text-white opacity-75">
-                                    Rol: {user?.role}
-                                </small>
+                                <small className="text-white opacity-75">Rol: {user?.role}</small>
                             </div>
 
                             <button className="btn btn-outline-light" onClick={logout}>
@@ -156,7 +436,7 @@ export default function StaffDashboard() {
                 </div>
             </nav>
 
-            {/* Navegación por tabs */}
+            {/* Tabs */}
             <div className="tabs-navigation">
                 <div className="container-fluid">
                     <ul className="nav nav-tabs">
@@ -182,18 +462,17 @@ export default function StaffDashboard() {
                 </div>
             </div>
 
-            {/* Contenido principal */}
+            {/* Contenido */}
             <main className="main-content">
                 <div className="container-fluid">
+                    {/* TAB PRODUCTOS */}
                     {activeTab === "productos" && (
                         <div className="content-card">
                             <div className="card-header">
                                 <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
                                     <div>
                                         <h4 className="mb-1">Catálogo de Productos</h4>
-                                        <div className="text-muted">
-                                            Total de productos: {products.length}
-                                        </div>
+                                        <div className="text-muted">Total de productos: {products.length}</div>
                                     </div>
 
                                     <div className="search-box">
@@ -214,58 +493,46 @@ export default function StaffDashboard() {
                                     <table className="table table-hover align-middle">
                                         <thead>
                                         <tr>
-                                            <th>Foto</th>
-                                            <th>Nombre</th>
-                                            <th>Talles y/o Colores</th>
+                                            <th>Producto</th>
                                             <th className="text-end">Precio Unidad</th>
-                                            <th className="text-end">Precio Combo</th>
+                                            <th className="text-end">Combo 2x</th>
+                                            <th className="text-end">Combo 3x</th>
+                                            <th className="text-end">Combo 4x</th>
+                                            <th className="text-end">Combo 5x</th>
                                             <th className="text-center">Acciones</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         {filteredProducts.length === 0 ? (
                                             <tr>
-                                                <td colSpan={6} className="text-center text-muted py-5">
-                                                    {query ?
-                                                        "No se encontraron productos con ese nombre" :
-                                                        "No hay productos disponibles"}
+                                                <td colSpan={7} className="text-center text-muted py-5">
+                                                    {query ? "No se encontraron productos con ese nombre" : "No hay productos disponibles"}
                                                 </td>
                                             </tr>
                                         ) : (
-                                            filteredProducts.map((product) => (
-                                                <tr key={product.id}>
-                                                    <td>
-                                                        {product.foto ? (
-                                                            <img
-                                                                src={product.foto}
-                                                                alt={product.nombre}
-                                                                className="product-img-sm"
-                                                            />
-                                                        ) : (
-                                                            <div className="product-img-placeholder-sm">
-                                                                <i className="bi bi-image"></i>
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td className="fw-semibold">{product.nombre}</td>
-                                                    <td>
-                                                        <span className="text-muted" style={{fontSize: '0.95rem'}}>
-                                                            {product.tallesColores || "No especificado"}
-                                                        </span>
-                                                    </td>
-                                                    <td className="text-end fw-bold">${parseFloat(product.precioUnidad).toFixed(2)}</td>
-                                                    <td className="text-end fw-bold">${parseFloat(product.precioCombo).toFixed(2)}</td>
-                                                    <td className="text-center">
-                                                        <button
-                                                            className="btn btn-sm btn-outline-primary"
-                                                            onClick={() => viewProductDetails(product)}
-                                                        >
-                                                            <i className="bi bi-eye me-1"></i>
-                                                            Ver
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))
+                                            filteredProducts.map((product) => {
+                                                const c2 = getComboPrice(product, 2);
+                                                const c3 = getComboPrice(product, 3);
+                                                const c4 = getComboPrice(product, 4);
+                                                const c5 = getComboPrice(product, 5);
+
+                                                return (
+                                                    <tr key={product.id}>
+                                                        <td className="fw-semibold">{product.nombre}</td>
+                                                        <td className="text-end fw-bold">{formatMoneyOrDash(getUnitPrice(product))}</td>
+                                                        <td className="text-end fw-bold">{formatMoneyOrDash(c2)}</td>
+                                                        <td className="text-end fw-bold">{formatMoneyOrDash(c3)}</td>
+                                                        <td className="text-end fw-bold">{formatMoneyOrDash(c4)}</td>
+                                                        <td className="text-end fw-bold">{formatMoneyOrDash(c5)}</td>
+                                                        <td className="text-center">
+                                                            <button className="btn btn-sm btn-outline-primary" onClick={() => viewProductDetails(product)}>
+                                                                <i className="bi bi-eye me-1"></i>
+                                                                Ver
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
                                         )}
                                         </tbody>
                                     </table>
@@ -274,204 +541,315 @@ export default function StaffDashboard() {
                         </div>
                     )}
 
+                    {/* TAB VENTAS */}
                     {activeTab === "ventas" && (
-                        <>
-                            {dateFilter && (
-                                <div className="content-card mb-4">
+                        <div className="row g-4">
+                            {/* CARRITO / REGISTRAR */}
+                            <div className="col-12 col-lg-5">
+                                <div className="content-card">
+                                    <div className="card-header">
+                                        <h4 className="mb-1">Nueva Venta</h4>
+                                        <div className="text-muted">Agregá productos al carrito y registrá la venta</div>
+                                    </div>
+
                                     <div className="card-body">
-                                        <div className="row g-4">
-                                            <div className="col-md-12">
-                                                <div className="stat-card stat-card-success">
-                                                    <div className="stat-icon">
-                                                        <i className="bi bi-cash-coin"></i>
-                                                    </div>
-                                                    <div className="stat-content">
-                                                        <div className="stat-label">Total Ventas del Día</div>
-                                                        <div className="stat-value">${totalVentasDia.toFixed(2)}</div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        {/* Agregar item */}
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                Producto <span className="text-danger">*</span>
+                                            </label>
+                                            <select
+                                                className="form-select"
+                                                value={cartForm.productId}
+                                                onChange={(e) => setCartForm((prev) => ({ ...prev, productId: e.target.value }))}
+                                            >
+                                                <option value="">Seleccionar producto</option>
+                                                {products.map((p) => (
+                                                    <option key={p.id} value={p.id}>
+                                                        {p.nombre}
+                                                        {buildProductTypesLabel(p)}
+                                                    </option>
+                                                ))}
+                                            </select>
                                         </div>
-                                    </div>
-                                </div>
-                            )}
 
-                            <div className="row g-4">
-                                {/* Formulario de venta */}
-                                <div className="col-12 col-lg-5">
-                                    <div className="content-card">
-                                        <div className="card-header">
-                                            <h4 className="mb-1">Nueva Venta</h4>
-                                            <div className="text-muted">
-                                                Registre las ventas realizadas
-                                            </div>
+                                        {/* Selección de precio (radios) - SIN VALORES */}
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">Tipo de precio</label>
+
+                                            {!selectedProductForCart ? (
+                                                <div className="text-muted small">Seleccioná un producto para ver sus opciones.</div>
+                                            ) : (
+                                                <div className="d-flex flex-wrap gap-2">
+                                                    {pricingOptions.map((opt) => (
+                                                        <div key={opt.value}>
+                                                            <input
+                                                                className="btn-check"
+                                                                type="radio"
+                                                                name="pricingType"
+                                                                id={`pricing-${opt.value}`}
+                                                                checked={cartForm.pricingType === opt.value}
+                                                                onChange={() => setCartForm((prev) => ({ ...prev, pricingType: opt.value }))}
+                                                            />
+                                                            <label className="btn btn-outline-primary" htmlFor={`pricing-${opt.value}`}>
+                                                                {opt.label}
+                                                            </label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                        <div className="card-body">
-                                            <form onSubmit={handleSaleSubmit}>
-                                                <div className="mb-3">
-                                                    <label className="form-label fw-semibold">
-                                                        Producto <span className="text-danger">*</span>
-                                                    </label>
-                                                    <select
-                                                        className="form-select"
-                                                        value={saleForm.productId}
-                                                        onChange={(e) => setSaleForm({...saleForm, productId: e.target.value})}
-                                                        required
-                                                    >
-                                                        <option value="">Seleccionar producto</option>
-                                                        {products.map(product => (
-                                                            <option key={product.id} value={product.id}>
-                                                                {product.nombre} - ${product.precioUnidad}
-                                                            </option>
+
+                                        {/* Cantidad */}
+                                        <div className="mb-3">
+                                            <label className="form-label fw-semibold">
+                                                {(() => {
+                                                    const p = getCurrentPricing();
+                                                    if (!p) return "Cantidad";
+                                                    if (p.packSize === 1) return "Cantidad (unidades)";
+                                                    return `Cantidad (combos ${p.packSize}x)`;
+                                                })()}{" "}
+                                                <span className="text-danger">*</span>
+                                            </label>
+
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                min="1"
+                                                value={cartForm.qty}
+                                                onChange={(e) => setCartForm((prev) => ({ ...prev, qty: e.target.value }))}
+                                            />
+
+                                            {(() => {
+                                                const p = getCurrentPricing();
+                                                if (!p) return null;
+                                                const qty = Math.floor(Number(cartForm.qty));
+                                                if (!Number.isFinite(qty) || qty < 1) return null;
+
+                                                if (p.packSize === 1) {
+                                                    return <div className="form-text">Seleccionaste <b>{qty}</b> unidad(es).</div>;
+                                                }
+
+                                                return (
+                                                    <div className="form-text">
+                                                        Equivale a <b>{qty * p.packSize} unidades</b>.
+                                                    </div>
+                                                );
+                                            })()}
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            className="btn btn-primary w-100 mb-4"
+                                            onClick={addToCart}
+                                            disabled={!cartForm.productId}
+                                        >
+                                            <i className="bi bi-plus-circle me-2"></i>
+                                            Agregar al carrito
+                                        </button>
+
+                                        {/* Resumen stock última venta */}
+                                        {lastStockMovements.length > 0 && (
+                                            <div className="alert alert-light border rounded-3">
+                                                <div className="d-flex justify-content-between align-items-start">
+                                                    <div>
+                                                        <div className="fw-bold mb-1">
+                                                            <i className="bi bi-box-seam me-2"></i>
+                                                            Stock (última venta)
+                                                        </div>
+                                                        {lastStockMovements.map((m) => (
+                                                            <div key={m.productId} className="small">
+                                                                <span className="fw-semibold">{m.productName}:</span>{" "}
+                                                                <span className="text-info fw-bold">{m.before}</span>{" "}
+                                                                -{" "}
+                                                                <span className="text-danger fw-bold">
+                                  {m.sold}↓
+                                </span>{" "}
+                                                                ={" "}
+                                                                <span className="text-success fw-bold">{m.after}</span>
+                                                            </div>
                                                         ))}
-                                                    </select>
-                                                </div>
-
-                                                <div className="mb-3">
-                                                    <label className="form-label fw-semibold">
-                                                        Cantidad (unidades) <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        className="form-control"
-                                                        min="1"
-                                                        value={saleForm.cantidad}
-                                                        onChange={(e) => setSaleForm({...saleForm, cantidad: e.target.value})}
-                                                        required
-                                                    />
-                                                </div>
-
-                                                <div className="mb-3">
-                                                    <label className="form-label fw-semibold">
-                                                        Monto cobrado ($) <span className="text-danger">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="number"
-                                                        className="form-control"
-                                                        step="0.01"
-                                                        min="0"
-                                                        value={saleForm.montoCobrado}
-                                                        onChange={(e) => setSaleForm({...saleForm, montoCobrado: e.target.value})}
-                                                        required
-                                                    />
-                                                </div>
-
-                                                <div className="mb-4">
-                                                    <label className="form-label fw-semibold">
-                                                        Método de cobro <span className="text-danger">*</span>
-                                                    </label>
-                                                    <select
-                                                        className="form-select"
-                                                        value={saleForm.metodoCobro}
-                                                        onChange={(e) => setSaleForm({...saleForm, metodoCobro: e.target.value})}
-                                                        required
-                                                    >
-                                                        <option value="Efectivo">Efectivo</option>
-                                                        <option value="Mercado Pago">Mercado Pago</option>
-                                                    </select>
-                                                </div>
-
-                                                <button type="submit" className="btn btn-success w-100">
-                                                    <i className="bi bi-check-circle me-2"></i>
-                                                    Registrar Venta
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Lista de ventas */}
-                                <div className="col-12 col-lg-7">
-                                    <div className="content-card">
-                                        <div className="card-header">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <div>
-                                                    <h4 className="mb-1">Historial de Ventas</h4>
-                                                    <div className="text-muted">
-                                                        Ventas registradas por el personal
                                                     </div>
-                                                </div>
-
-                                                <div className="d-flex gap-2">
-                                                    <input
-                                                        type="date"
-                                                        className="form-control"
-                                                        value={dateFilter}
-                                                        onChange={(e) => setDateFilter(e.target.value)}
-                                                    />
-                                                    {dateFilter && (
-                                                        <button
-                                                            className="btn btn-outline-secondary"
-                                                            onClick={() => setDateFilter("")}
-                                                        >
-                                                            <i className="bi bi-x"></i>
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        className="btn btn-sm btn-outline-secondary"
+                                                        onClick={() => setLastStockMovements([])}
+                                                    >
+                                                        <i className="bi bi-x"></i>
+                                                    </button>
                                                 </div>
                                             </div>
-                                        </div>
+                                        )}
 
-                                        <div className="card-body">
-                                            <div className="table-responsive">
-                                                <table className="table table-hover align-middle">
-                                                    <thead>
-                                                    <tr>
-                                                        <th>Fecha</th>
-                                                        <th>Producto</th>
-                                                        <th className="text-end">Cantidad</th>
-                                                        <th className="text-end">Monto</th>
-                                                        <th>Método</th>
-                                                        <th>Registrado por</th>
-                                                    </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    {filteredSales.length === 0 ? (
-                                                        <tr>
-                                                            <td colSpan={6} className="text-center text-muted py-5">
-                                                                {dateFilter ?
-                                                                    "No hay ventas en esta fecha" :
-                                                                    "No hay ventas registradas"}
-                                                            </td>
-                                                        </tr>
-                                                    ) : (
-                                                        filteredSales.map((sale) => (
-                                                            <tr key={sale.id}>
-                                                                <td>
-                                                                    {new Date(sale.fecha).toLocaleDateString('es-AR')}
-                                                                    <br />
-                                                                    <small className="text-muted">
-                                                                        {new Date(sale.fecha).toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'})}
-                                                                    </small>
-                                                                </td>
-                                                                <td className="fw-semibold">{sale.productName}</td>
-                                                                <td className="text-end">{sale.cantidad} un.</td>
-                                                                <td className="text-end fw-bold">${sale.montoCobrado.toFixed(2)}</td>
-                                                                <td>
-                                  <span className={`badge ${sale.metodoCobro === 'Efectivo' ? 'bg-success' : 'bg-primary'}`}>
-                                    {sale.metodoCobro}
-                                  </span>
-                                                                </td>
-                                                                <td>
-                                                                    <small>{sale.registradoPor}</small>
-                                                                </td>
-                                                            </tr>
-                                                        ))
-                                                    )}
-                                                    </tbody>
-                                                </table>
+                                        {/* Carrito */}
+                                        <div className="border rounded-3 p-3 bg-light">
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                <h6 className="mb-0 fw-bold">
+                                                    <i className="bi bi-cart3 me-2"></i>
+                                                    Carrito
+                                                </h6>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    onClick={clearCart}
+                                                    disabled={cartItems.length === 0}
+                                                >
+                                                    Vaciar
+                                                </button>
                                             </div>
+
+                                            {cartItems.length === 0 ? (
+                                                <div className="text-muted small">No hay items en el carrito.</div>
+                                            ) : (
+                                                <div className="d-flex flex-column gap-2">
+                                                    {cartItems.map((it) => (
+                                                        <div key={it.id} className="d-flex justify-content-between align-items-center bg-white p-2 rounded-3">
+                                                            <div className="me-2">
+                                                                <div className="fw-semibold">{it.productName}</div>
+                                                                <div className="small text-muted">
+                                                                    {renderPricingTypeLabel(it.pricingType)} •{" "}
+                                                                    {it.packSize === 1
+                                                                        ? `${it.qtyPacks} un.`
+                                                                        : `${it.qtyPacks} combo(s) → ${it.qtyPacks * it.packSize} un.`}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="d-flex align-items-center gap-2">
+                                                                <div className="btn-group" role="group">
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-sm btn-outline-primary"
+                                                                        onClick={() => changeCartItemQty(it.id, -1)}
+                                                                    >
+                                                                        <i className="bi bi-dash"></i>
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="btn btn-sm btn-outline-primary"
+                                                                        onClick={() => changeCartItemQty(it.id, +1)}
+                                                                    >
+                                                                        <i className="bi bi-plus"></i>
+                                                                    </button>
+                                                                </div>
+
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-outline-danger"
+                                                                    onClick={() => removeCartItem(it.id)}
+                                                                >
+                                                                    <i className="bi bi-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            <hr />
+
+                                            {/* SOLO TOTAL A COBRAR */}
+                                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                                <div className="fw-semibold">Total a cobrar</div>
+                                                <div className="fs-5 fw-bold text-success">{formatMoneyOrDash(cartTotal)}</div>
+                                            </div>
+
+                                            <div className="mb-3">
+                                                <label className="form-label fw-semibold">
+                                                    Método de cobro <span className="text-danger">*</span>
+                                                </label>
+                                                <select
+                                                    className="form-select"
+                                                    value={metodoCobro}
+                                                    onChange={(e) => setMetodoCobro(e.target.value)}
+                                                >
+                                                    <option value="Efectivo">Efectivo</option>
+                                                    <option value="Mercado Pago">Mercado Pago</option>
+                                                </select>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className="btn btn-success w-100"
+                                                onClick={checkout}
+                                                disabled={cartItems.length === 0}
+                                            >
+                                                <i className="bi bi-check-circle me-2"></i>
+                                                Registrar Venta
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </>
+
+                            {/* HISTORIAL (sin total) */}
+                            <div className="col-12 col-lg-7">
+                                <div className="content-card">
+                                    <div className="card-header">
+                                        <div className="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h4 className="mb-1">Historial</h4>
+                                                <div className="text-muted">Solo muestra lo que registraste vos</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="card-body">
+                                        <div className="table-responsive">
+                                            <table className="table table-hover align-middle">
+                                                <thead>
+                                                <tr>
+                                                    <th>Fecha</th>
+                                                    <th>Producto</th>
+                                                    <th>Detalle</th>
+                                                    <th>Método</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                {visibleSales.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={4} className="text-center text-muted py-5">
+                                                            No hay ventas registradas por vos todavía
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    [...visibleSales]
+                                                        .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+                                                        .map((sale) => {
+                                                            const primaryProduct = buildSalePrimaryProduct(sale);
+                                                            const lines = buildSaleDetailLines(sale);
+
+                                                            return (
+                                                                <tr key={sale.id}>
+                                                                    <td>{new Date(sale.fecha).toLocaleDateString("es-AR")}</td>
+                                                                    <td className="fw-semibold">{primaryProduct}</td>
+                                                                    <td className="small">
+                                                                        {lines.map((ln, idx) => (
+                                                                            <div key={idx}>{ln}</div>
+                                                                        ))}
+                                                                    </td>
+                                                                    <td>
+                                      <span className={`badge ${sale.metodoCobro === "Efectivo" ? "bg-success" : "bg-primary"}`}>
+                                        {sale.metodoCobro}
+                                      </span>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })
+                                                )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </div>
             </main>
 
             {/* Modal de Detalles del Producto */}
             {showProductDetailModal && selectedProduct && (
-                <div className="modal fade show d-block" tabIndex="-1" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+                <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
                     <div className="modal-dialog modal-dialog-centered modal-lg">
                         <div className="modal-content">
                             <div className="modal-header">
@@ -481,94 +859,67 @@ export default function StaffDashboard() {
                                 </h5>
                                 <button type="button" className="btn-close" onClick={closeProductDetailModal}></button>
                             </div>
+
                             <div className="modal-body">
-                                <div className="row g-4">
-                                    {/* Imagen del producto - Prioridad visual */}
-                                    <div className="col-md-6">
-                                        <div className="text-center">
-                                            {selectedProduct.foto ? (
-                                                <img
-                                                    src={selectedProduct.foto}
-                                                    alt={selectedProduct.nombre}
-                                                    className="img-fluid rounded-3 shadow-sm"
-                                                    style={{maxHeight: '400px', width: '100%', objectFit: 'contain', border: '3px solid #e9ecef'}}
-                                                />
-                                            ) : (
-                                                <div className="d-flex align-items-center justify-content-center bg-light rounded-3"
-                                                     style={{height: '400px', border: '3px dashed #dee2e6'}}>
-                                                    <div className="text-center">
-                                                        <i className="bi bi-image display-1 text-muted mb-3"></i>
-                                                        <p className="text-muted mb-0">Sin imagen disponible</p>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                {(() => {
+                                    const unit = getUnitPrice(selectedProduct);
+                                    const c2 = getComboPrice(selectedProduct, 2);
+                                    const c3 = getComboPrice(selectedProduct, 3);
+                                    const c4 = getComboPrice(selectedProduct, 4);
+                                    const c5 = getComboPrice(selectedProduct, 5);
 
-                                    {/* Información del producto */}
-                                    <div className="col-md-6">
-                                        <div className="d-flex flex-column h-100">
-                                            <div className="mb-4">
-                                                <label className="form-label fw-bold text-muted text-uppercase"
-                                                       style={{fontSize: '0.85rem', letterSpacing: '0.5px'}}>
-                                                    Nombre del Producto
-                                                </label>
-                                                <h4 className="mb-0 fw-bold">{selectedProduct.nombre}</h4>
+                                    return (
+                                        <div className="row g-3">
+                                            <div className="col-12">
+                                                <div className="fw-bold fs-4">{selectedProduct.nombre}</div>
+                                                <div className="text-muted small">Precios disponibles</div>
                                             </div>
 
-                                            <div className="mb-4">
-                                                <label className="form-label fw-bold text-muted text-uppercase"
-                                                       style={{fontSize: '0.85rem', letterSpacing: '0.5px'}}>
-                                                    Talles y/o Colores
-                                                </label>
-                                                <p className="mb-0 fs-5">
-                                                    {selectedProduct.tallesColores || (
-                                                        <span className="text-muted fst-italic">No especificado</span>
-                                                    )}
-                                                </p>
-                                            </div>
-
-                                            <div className="mb-4">
-                                                <div className="row g-3">
-                                                    <div className="col-6">
-                                                        <div className="p-3 bg-light rounded-3">
-                                                            <label className="form-label fw-bold text-muted text-uppercase mb-2"
-                                                                   style={{fontSize: '0.75rem', letterSpacing: '0.5px'}}>
-                                                                Precio Unidad
-                                                            </label>
-                                                            <div className="fs-3 fw-bold text-primary">
-                                                                ${parseFloat(selectedProduct.precioUnidad).toFixed(2)}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="col-6">
-                                                        <div className="p-3 bg-light rounded-3">
-                                                            <label className="form-label fw-bold text-muted text-uppercase mb-2"
-                                                                   style={{fontSize: '0.75rem', letterSpacing: '0.5px'}}>
-                                                                Precio Combo
-                                                            </label>
-                                                            <div className="fs-3 fw-bold text-success">
-                                                                ${parseFloat(selectedProduct.precioCombo).toFixed(2)}
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                            <div className="col-12 col-md-4">
+                                                <div className="p-3 bg-light rounded-3 h-100">
+                                                    <div className="text-muted small fw-semibold">Unidad</div>
+                                                    <div className="fs-4 fw-bold text-primary">{formatMoneyOrDash(unit)}</div>
                                                 </div>
                                             </div>
 
-                                            <div className="mt-auto">
-                                                <div className="p-3 bg-light rounded-3">
-                                                    <div className="d-flex align-items-center gap-2">
-                                                        <i className="bi bi-info-circle text-muted"></i>
-                                                        <small className="text-muted">
-                                                            ID del producto: <strong>{selectedProduct.id}</strong>
-                                                        </small>
-                                                    </div>
+                                            <div className="col-12 col-md-4">
+                                                <div className="p-3 bg-light rounded-3 h-100">
+                                                    <div className="text-muted small fw-semibold">Combo 2x</div>
+                                                    <div className="fs-5 fw-bold text-success">{formatMoneyOrDash(c2)}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-12 col-md-4">
+                                                <div className="p-3 bg-light rounded-3 h-100">
+                                                    <div className="text-muted small fw-semibold">Combo 3x</div>
+                                                    <div className="fs-5 fw-bold text-success">{formatMoneyOrDash(c3)}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-12 col-md-6">
+                                                <div className="p-3 bg-light rounded-3 h-100">
+                                                    <div className="text-muted small fw-semibold">Combo 4x</div>
+                                                    <div className="fs-5 fw-bold text-success">{formatMoneyOrDash(c4)}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-12 col-md-6">
+                                                <div className="p-3 bg-light rounded-3 h-100">
+                                                    <div className="text-muted small fw-semibold">Combo 5x</div>
+                                                    <div className="fs-5 fw-bold text-success">{formatMoneyOrDash(c5)}</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-12">
+                                                <div className="p-2 bg-light rounded-3 text-muted small">
+                                                    ID del producto: <b>{selectedProduct.id}</b>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
+                                    );
+                                })()}
                             </div>
+
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={closeProductDetailModal}>
                                     Cerrar
